@@ -23,7 +23,12 @@ export const queryClient = new QueryClient({
 
 // HTTP client with automatic token handling for Spring Boot backend
 export const httpClient = async (url: string, options: RequestInit = {}) => {
-    const { token, refreshTokens } = useAuthStore.getState();
+    const { token, refreshTokens, isAuthenticated } = useAuthStore.getState();
+
+    // Check if user is authenticated
+    if (!isAuthenticated || !token) {
+        throw new Error('User not authenticated');
+    }
 
     // Determine if it's a full URL or relative path
     const apiUrl = url.startsWith('http')
@@ -32,7 +37,7 @@ export const httpClient = async (url: string, options: RequestInit = {}) => {
 
     const headers = {
         'Content-Type': 'application/json',
-        ...(token && { Authorization: `Bearer ${token}` }),
+        Authorization: `Bearer ${token}`,
         ...options.headers,
     };
 
@@ -43,9 +48,13 @@ export const httpClient = async (url: string, options: RequestInit = {}) => {
 
     // Handle token expiration
     if (response.status === 401 && token) {
+        console.log('Token expired during request, attempting refresh...');
         const refreshed = await refreshTokens();
+        
         if (refreshed) {
             const newToken = useAuthStore.getState().token;
+            console.log('Token refreshed, retrying request...');
+            
             response = await fetch(apiUrl, {
                 ...options,
                 headers: {
@@ -53,12 +62,15 @@ export const httpClient = async (url: string, options: RequestInit = {}) => {
                     Authorization: `Bearer ${newToken}`,
                 },
             });
+        } else {
+            throw new Error('Authentication failed - please login again');
         }
     }
 
     if (!response.ok) {
-        const errorData = await response.text();
-        throw new Error(`HTTP error! status: ${response.status}, message: ${errorData}`);
+        const errorMessage = `HTTP error! status: ${response.status}`;
+        console.error(errorMessage);
+        throw new Error(errorMessage);
     }
 
     const contentType = response.headers.get('content-type');

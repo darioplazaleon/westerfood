@@ -40,10 +40,11 @@ export function DataTable<TData, TValue>({
   return (
     <div>
       <div className="flex w-full justify-between items-center">
-      <p className="text-xl font-bold">Gestión de Empresas</p>
-      <CreateModalEmpresa onCreateCompany={(company) => {
-        console.log('New company:', company)
-      }} />
+        <p className="text-xl font-bold">Gestión de Empresas</p>
+        <CreateModalEmpresa 
+          title="Crear Nueva Empresa"
+          description="Complete el formulario para añadir una nueva empresa al sistema."
+        />
       </div>
       <div className="flex items-center py-4">
         <Input
