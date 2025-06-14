@@ -14,6 +14,7 @@ import { Company } from './colums'
 import { CompanyFormValues } from '@/lib/validations/company-form'
 import { saveCompany } from '@/actions/company-actions'
 import { CompanyForm } from '@/components/dashboard/admin/empresas/company-form'
+import { toast } from 'sonner'
 
 interface CompanyFormModalProps {
   company?: Company | null
@@ -49,6 +50,7 @@ export function CreateModalEmpresa({ company, title, description, onSuccess }: C
 
       if (result.success) {
         setIsOpen(false)
+        toast.success('Empresa creada correctamente.')
       } else {
         // Manejar error general
         if (result.errors._form) {

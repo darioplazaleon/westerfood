@@ -1,20 +1,22 @@
-'use client';
+'use client'
 
-import { ProtectedRoute } from '@/components/auth/protected-route';
-import {Navbar} from "@/components/landing/navbar";
+import { ProtectedRoute } from '@/components/auth/protected-route'
+import { Navbar } from '@/components/landing/navbar'
+import { Toaster } from '@/components/ui/sonner'
 // import { DashboardLayout } from '@/components/layout/dashboard-layout';
 
 export default function Layout({
-                                   children,
+                                 children,
                                }: {
-    children: React.ReactNode;
+  children: React.ReactNode;
 }) {
-    return (
-        <ProtectedRoute>
-            <Navbar/>
-            {/*<DashboardLayout>*/}
-                {children}
-            {/*</DashboardLayout>*/}
-        </ProtectedRoute>
-    );
+  return (
+    <ProtectedRoute>
+      <Navbar />
+      {/*<DashboardLayout>*/}
+      {children}
+      {/*</DashboardLayout>*/}
+      <Toaster richColors/>
+    </ProtectedRoute>
+  )
 }
