@@ -19,6 +19,12 @@ export async function GET() {
   const tokenCookie = cookieStore.get(TOKEN_COOKIE)
   const refreshTokenCookie = cookieStore.get(REFRESH_TOKEN_COOKIE)
   
+  console.log('🍪 GET tokens from cookies:', {
+    hasToken: !!tokenCookie?.value,
+    hasRefreshToken: !!refreshTokenCookie?.value,
+    tokenLength: tokenCookie?.value?.length || 0
+  })
+  
   return NextResponse.json({
     token: tokenCookie?.value || null,
     refreshToken: refreshTokenCookie?.value || null,
@@ -26,29 +32,48 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const { token, refreshToken } = await request.json()
-  const cookieStore = await cookies()
+  try {
+    const { token, refreshToken } = await request.json()
+    const cookieStore = await cookies()
 
-  // Set token cookie if provided, otherwise delete it
-  if (token) {
-    cookieStore.set(TOKEN_COOKIE, token, COOKIE_OPTIONS)
-  } else {
-    cookieStore.delete(TOKEN_COOKIE)
+    console.log('🍪 POST tokens to cookies:', {
+      hasToken: !!token,
+      hasRefreshToken: !!refreshToken,
+      tokenLength: token?.length || 0
+    })
+
+    // Set token cookie if provided, otherwise delete it
+    if (token) {
+      cookieStore.set(TOKEN_COOKIE, token, COOKIE_OPTIONS)
+      console.log('✅ Token cookie set')
+    } else {
+      cookieStore.delete(TOKEN_COOKIE)
+      console.log('🗑️ Token cookie deleted')
+    }
+
+    // Set refresh token cookie if provided, otherwise delete it
+    if (refreshToken) {
+      cookieStore.set(REFRESH_TOKEN_COOKIE, refreshToken, COOKIE_OPTIONS)
+      console.log('✅ Refresh token cookie set')
+    } else {
+      cookieStore.delete(REFRESH_TOKEN_COOKIE)
+      console.log('🗑️ Refresh token cookie deleted')
+    }
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('💥 Error setting token cookies:', error)
+    return NextResponse.json(
+      { error: 'Failed to set tokens' }, 
+      { status: 500 }
+    )
   }
-
-  // Set refresh token cookie if provided, otherwise delete it
-  if (refreshToken) {
-    cookieStore.set(REFRESH_TOKEN_COOKIE, refreshToken, COOKIE_OPTIONS)
-  } else {
-    cookieStore.delete(REFRESH_TOKEN_COOKIE)
-  }
-
-  return NextResponse.json({ success: true })
 }
 
 export async function DELETE() {
   const cookieStore = await cookies()
 
+  console.log('🗑️ Deleting token cookies')
   cookieStore.delete(TOKEN_COOKIE)
   cookieStore.delete(REFRESH_TOKEN_COOKIE)
   
