@@ -1,70 +1,71 @@
 import { Company } from '@/lib/validations/company-form'
 import { cookies } from 'next/headers'
-import { useAuthStore } from '@/lib/auth-store'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL
 
-const pendingRetries = new Set()
-
-async function handleResponse<T>(response: Response, requestId?: string): Promise<T> {
+async function handleResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
     try {
       const errorData = await response.json()
-
-      // Handle 401 Unauthorized errors with token refresh
-      if (response.status === 401 && !pendingRetries.has(requestId)) {
-        // Generate a unique ID for this request if not provided
-        const retryId = requestId || `retry-${Date.now()}`
-        pendingRetries.add(retryId)
-
-        console.log('Retrying request with new token', retryId)
-
-        // Try to refresh the token
-        const refreshed = await useAuthStore.getState().refreshTokens()
-
-        if (refreshed) {
-          // Remove from pending retries
-          pendingRetries.delete(retryId)
-
-          // Retry the original request with the new token
-          // This will depend on your implementation details
-          // You'll need to recreate the original request
-
-          // Example for getAll:
-          if (response.url.includes('/v1/companies')) {
-            return await companyService.getAll() as unknown as T
-          }
-        }
-      }
-
       throw new Error(errorData.message || `Error: ${response.status}`)
     } catch (e) {
       throw new Error(`Network error: ${response.status} ${response.statusText}`)
     }
   }
 
-  return response.json()
+  const contentType = response.headers.get('content-type')
+  if (contentType && contentType.includes('application/json')) {
+    return response.json()
+  }
+
+  // If it's not JSON, return the response as text
+  return response.text() as unknown as T
+}
+
+async function getAuthToken(): Promise<string | null> {
+  const cookieStore = await cookies()
+  return cookieStore.get('auth_token')?.value || null
 }
 
 export const companyService = {
 
   async getAll(): Promise<Company[]> {
-    const cookieStore = await cookies()
-    const token = cookieStore.get('auth_token')?.value
+    const token = await getAuthToken()
+    
+    if (!token) {
+      throw new Error('No authentication token available')
+    }
 
     const response = await fetch(`${API_URL}/v1/companies`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
       },
+      cache: 'no-store', // Ensure fresh data on each request
     })
-    const paginated = await handleResponse<Company[]>(response)
-    return paginated.content
+
+    const result = await handleResponse<any>(response)
+    
+    // Handle paginated response
+    if (result && typeof result === 'object' && 'content' in result) {
+      return result.content as Company[]
+    }
+    
+    // Handle direct array response
+    if (Array.isArray(result)) {
+      return result as Company[]
+    }
+    
+    return []
   },
 
   async create(company: Omit<Company, 'id'>): Promise<Company> {
-    const cookieStore = await cookies()
-    const token = cookieStore.get('auth_token')?.value
+    const token = await getAuthToken()
+    
+    if (!token) {
+      throw new Error('No authentication token available')
+    }
 
     const response = await fetch(`${API_URL}/v1/companies`, {
       method: 'POST',
@@ -74,30 +75,45 @@ export const companyService = {
       },
       body: JSON.stringify(company),
     })
+    
     return handleResponse<Company>(response)
   },
 
-  // Actualizar una empresa existente
   async update(id: string, company: Omit<Company, 'id'>): Promise<Company> {
-    const response = await fetch(`${API_URL}/companies/${id}`, {
+    const token = await getAuthToken()
+    
+    if (!token) {
+      throw new Error('No authentication token available')
+    }
+
+    const response = await fetch(`${API_URL}/v1/companies/${id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
       },
       body: JSON.stringify(company),
     })
+    
     return handleResponse<Company>(response)
   },
 
-  // Eliminar una empresa
   async delete(id: string): Promise<void> {
-    const response = await fetch(`${API_URL}/companies/${id}`, {
+    const token = await getAuthToken()
+    
+    if (!token) {
+      throw new Error('No authentication token available')
+    }
+
+    const response = await fetch(`${API_URL}/v1/companies/${id}`, {
       method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
     })
 
     if (!response.ok) {
-      return handleResponse<void>(response)
+      await handleResponse<void>(response)
     }
   },
-
 }

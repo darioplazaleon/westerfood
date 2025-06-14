@@ -44,6 +44,7 @@ interface AuthState {
   hasRole: (role: string) => boolean;
   hasAnyRole: (roles: string[]) => boolean;
   clearAuth: () => void;
+  syncServerTokens: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -59,6 +60,12 @@ export const useAuthStore = create<AuthState>()(
         token: null,
         refreshToken: null,
 
+        // Sync tokens with server cookies
+        syncServerTokens: async () => {
+          const { token, refreshToken } = get()
+          await setServerToken(token, refreshToken)
+        },
+
         // Initialize Keycloak
         initialize: async () => {
           try {
@@ -67,22 +74,44 @@ export const useAuthStore = create<AuthState>()(
             const authenticated = await keycloak.init({
               onLoad: 'check-sso',
               silentCheckSsoRedirectUri: `${window.location.origin}/silent-check-sso.html`,
-              checkLoginIframe: false, // Disable iframe check to prevent timeout
-              silentCheckSsoFallback: false, // Disable fallback that can cause issues
-              enableLogging: false, // Disable logging to reduce noise
+              checkLoginIframe: false,
+              silentCheckSsoFallback: false,
+              enableLogging: false,
               pkceMethod: 'S256',
-              // Add timeout configuration
-              messageReceiveTimeout: 5000, // 5 second timeout
-              // Force a fresh check instead of relying on iframe
+              messageReceiveTimeout: 5000,
               flow: 'standard',
             })
 
             if (authenticated) {
               await get().getUserInfo()
 
-              // Set up token refresh
-              keycloak.onTokenExpired = () => {
-                get().refreshTokens()
+              // Set up automatic token refresh with server sync
+              keycloak.onTokenExpired = async () => {
+                console.log('Token expired, refreshing...')
+                const refreshed = await get().refreshTokens()
+                if (refreshed) {
+                  console.log('Token refreshed successfully')
+                  // Sync the new tokens with server cookies
+                  await get().syncServerTokens()
+                } else {
+                  console.error('Failed to refresh token, logging out')
+                  get().clearAuth()
+                }
+              }
+
+              // Also set up the refresh callback for manual refreshes
+              keycloak.onAuthRefreshSuccess = async () => {
+                console.log('Auth refresh success, syncing server tokens')
+                set({
+                  token: keycloak.token || null,
+                  refreshToken: keycloak.refreshToken || null,
+                })
+                await get().syncServerTokens()
+              }
+
+              keycloak.onAuthRefreshError = () => {
+                console.error('Auth refresh error, clearing auth')
+                get().clearAuth()
               }
 
               set({
@@ -106,7 +135,6 @@ export const useAuthStore = create<AuthState>()(
 
           } catch (error) {
             console.error('Keycloak initialization failed:', error)
-            // Don't fail completely on initialization error - allow manual login
             set({
               isInitialized: true,
               isLoading: false,
@@ -146,17 +174,20 @@ export const useAuthStore = create<AuthState>()(
           try {
             const refreshed = await keycloak.updateToken(30)
             if (refreshed) {
+              const newToken = keycloak.token || null
+              const newRefreshToken = keycloak.refreshToken || null
+
               set({
-                token: keycloak.token || null,
-                refreshToken: keycloak.refreshToken || null,
+                token: newToken,
+                refreshToken: newRefreshToken,
               })
 
               // Send session data to the server
               const { user } = get()
               await setServerSession(user, true)
 
-              // Send token data to the server
-              await setServerToken(keycloak.token || null, keycloak.refreshToken || null)
+              // Send updated token data to the server
+              await setServerToken(newToken, newRefreshToken)
 
               return true
             }
@@ -283,6 +314,7 @@ const setServerToken = async (token: string | null, refreshToken: string | null)
       throw new Error(`Failed to set server token: ${response.status}`)
     }
 
+    console.log('Server tokens updated successfully')
     return true
   } catch (error) {
     console.error('Failed to set server token:', error)
