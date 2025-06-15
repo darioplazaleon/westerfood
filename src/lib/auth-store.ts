@@ -366,6 +366,7 @@ const setServerSession = async (user: UserInfo | null, isAuthenticated: boolean)
     const response = await fetch('/api/user/session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify({
         user,
         isAuthenticated,
@@ -399,6 +400,7 @@ const setServerToken = async (token: string | null, refreshToken: string | null)
     const response = await fetch('/api/user/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify({
         token,
         refreshToken,
