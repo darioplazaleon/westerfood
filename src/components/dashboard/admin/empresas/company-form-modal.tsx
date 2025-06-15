@@ -9,7 +9,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { Company } from './colums'
 import { CompanyFormValues } from '@/lib/validations/company-form'
 import { saveCompany } from '@/actions/company-actions'
@@ -20,13 +20,14 @@ interface CompanyFormModalProps {
   company?: Company | null
   title: string
   description: string
+  trigger?: React.ReactNode
   onSuccess?: () => void
 }
 
-export function CreateModalEmpresa({ company, title, description, onSuccess }: CompanyFormModalProps) {
-  const [isOpen, setIsOpen] = useState(false)
+export function CompanyFormModal({ company, title, description, trigger }: CompanyFormModalProps) {
   const [serverError, setServerError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isOpen, setIsOpen] = useState(false)
 
   // Define form with react-hook-form and zod validation
   async function handleSubmit(data: CompanyFormValues) {
@@ -48,9 +49,10 @@ export function CreateModalEmpresa({ company, title, description, onSuccess }: C
         formData,
       )
 
+
       if (result.success) {
+        toast.success(data.id ? 'Empresa actualizada correctamente.' : 'Empresa creada correctamente.')
         setIsOpen(false)
-        toast.success('Empresa creada correctamente.')
       } else {
         // Manejar error general
         if (result.errors._form) {
@@ -64,20 +66,28 @@ export function CreateModalEmpresa({ company, title, description, onSuccess }: C
     }
   }
 
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild onClick={() => setIsOpen(true)}>
-        <Button className="bg-red-600 text-white h-12">Añadir Empresa</Button>
+      <DialogTrigger asChild>
+        {trigger || (
+          <Button className="bg-red-600 text-white h-12">Añadir Empresa</Button>
+        )}
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Crear Nueva Empresa</DialogTitle>
+          <DialogTitle>{title}</DialogTitle>
           <DialogDescription>
-            Complete el formulario para añadir una nueva empresa al sistema.
+            {description}
           </DialogDescription>
         </DialogHeader>
 
-        <CompanyForm onSubmit={handleSubmit} isSubmitting={isSubmitting} serverError={serverError} company={company} />
+        <CompanyForm
+          onSubmit={handleSubmit}
+          isSubmitting={isSubmitting}
+          serverError={serverError}
+          company={company}
+        />
       </DialogContent>
     </Dialog>
   )

@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 import { ColumnDef } from '@tanstack/table-core'
 import {
@@ -9,6 +9,9 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Button } from '@/components/ui/button'
 import { MoreHorizontal } from 'lucide-react'
+import { CompanyFormModal } from '@/components/dashboard/admin/empresas/company-form-modal'
+import { CompanyAlertDialog } from '@/components/dashboard/admin/empresas/company-alert-dialog'
+import { CompanyDetails } from '@/components/dashboard/admin/empresas/company-details'
 
 export type Company = {
   id: string,
@@ -19,20 +22,20 @@ export type Company = {
 
 export const columns: ColumnDef<Company>[] = [
   {
-    accessorKey: "name",
-    header: "Nombre",
+    accessorKey: 'name',
+    header: 'Nombre',
   },
   {
-    accessorKey: "address",
-    header: "Dirección",
+    accessorKey: 'address',
+    header: 'Dirección',
   },
   {
-    accessorKey: "phone",
-    header: "Teléfono",
+    accessorKey: 'phone',
+    header: 'Teléfono',
   },
   {
-    id: "actions",
-    header: "Acciones",
+    id: 'actions',
+    header: 'Acciones',
     cell: ({ row }) => {
       const company = row.original
 
@@ -52,13 +55,23 @@ export const columns: ColumnDef<Company>[] = [
               Copiar ID
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Ver Detalle</DropdownMenuItem>
-            <DropdownMenuItem>Editar</DropdownMenuItem>
-            <DropdownMenuItem>Eliminar</DropdownMenuItem>
+            <CompanyDetails companyId={company.id} trigger={
+              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>Ver Detalle</DropdownMenuItem>
+            } />
+            <CompanyFormModal title={'Actualizar Empresa'}
+                              description={'Modifique los datos de la empresa'}
+                              company={company}
+                              trigger={<DropdownMenuItem onSelect={(e) => {
+                                e.preventDefault()
+                              }}>Editar</DropdownMenuItem>}
+            />
+            <CompanyAlertDialog company={company} trigger={
+              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>Eliminar</DropdownMenuItem>
+            } />
           </DropdownMenuContent>
         </DropdownMenu>
       )
-    }
-  }
+    },
+  },
 ]
 

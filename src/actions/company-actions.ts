@@ -1,36 +1,35 @@
-"use server"
+'use server'
 
-import { companyFormSchema, type CompanyFormState } from "@/lib/validations/company-form"
-import { companyService } from "@/lib/services/company-api"
-import { revalidatePath } from "next/cache"
+import { companyFormSchema, type CompanyFormState } from '@/lib/validations/company-form'
+import { companyService } from '@/lib/services/company-api'
+import { revalidatePath } from 'next/cache'
 
 // Server Action para obtener todas las empresas
 export async function getCompanies() {
   try {
     return await companyService.getAll()
   } catch (error) {
-    console.error("Error al obtener empresas:", error)
-    throw new Error("No se pudieron cargar las empresas")
+    console.error('Error al obtener empresas:', error)
+    throw new Error('No se pudieron cargar las empresas')
   }
 }
 
-// Server Action para obtener una empresa por ID
-// export async function getCompanyById(id: string) {
-//   try {
-//     return await companyService.getById(id)
-//   } catch (error) {
-//     console.error(`Error al obtener empresa ${id}:`, error)
-//     throw new Error("No se pudo cargar la empresa")
-//   }
-// }
+export async function getCompanyDetails(id: string) {
+  try {
+    return await companyService.getDetails(id)
+  } catch (error) {
+    console.error(`Error al obtener empresa ${id}:`, error)
+    throw new Error('No se pudo cargar la empresa')
+  }
+}
 
 // Server Action para crear o actualizar una empresa
 export async function saveCompany(prevState: CompanyFormState, formData: FormData): Promise<CompanyFormState> {
   const rawFormData = {
-    id: formData.get("id") === null ? undefined : (formData.get("id") as string),
-    name: formData.get("name") as string,
-    address: formData.get("address") as string,
-    phone: formData.get("phone") as string,
+    id: formData.get('id') === null ? undefined : (formData.get('id') as string),
+    name: formData.get('name') as string,
+    address: formData.get('address') as string,
+    phone: formData.get('phone') as string,
   }
 
   const validatedFields = companyFormSchema.safeParse(rawFormData)
@@ -52,14 +51,14 @@ export async function saveCompany(prevState: CompanyFormState, formData: FormDat
 
   try {
     if (id == null) {
-      console.log("Creando empresa")
+      console.log('Creando empresa')
       await companyService.create({ name, address, phone })
     } else {
-      console.log("Actualizando empresa")
+      console.log('Actualizando empresa')
       await companyService.update(id, { name, address, phone })
     }
 
-    revalidatePath("/dashboard/empresas")
+    revalidatePath('/dashboard/empresas')
 
     return {
       errors: {},
@@ -68,7 +67,7 @@ export async function saveCompany(prevState: CompanyFormState, formData: FormDat
   } catch (error) {
     return {
       errors: {
-        _form: error instanceof Error ? error.message : "Ocurrió un error al procesar el formulario",
+        _form: error instanceof Error ? error.message : 'Ocurrió un error al procesar el formulario',
       },
       success: false,
     }
@@ -81,13 +80,13 @@ export async function deleteCompany(id: string): Promise<{ success: boolean; err
     await companyService.delete(id)
 
     // Revalidar la ruta para actualizar los datos
-    revalidatePath("/")
+    revalidatePath('/dashboard/empresas')
 
     return { success: true }
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Ocurrió un error al eliminar la empresa",
+      error: error instanceof Error ? error.message : 'Ocurrió un error al eliminar la empresa',
     }
   }
 }
