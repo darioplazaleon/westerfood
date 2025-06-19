@@ -1,21 +1,28 @@
 "use client";
 
-import { mainDishFormSchema, MainDishFormValues } from '@/lib/validations/main-dish-form'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { z } from 'zod'
 
-interface DishFormProps {
-  onSubmit: (data: MainDishFormValues) => Promise<void>
-  isSubmitting: boolean
-  serverError?: string | null
+export interface PlateFormValues {
+  title: string;
+  description: string;
 }
 
-export function DishForm({ onSubmit, isSubmitting, serverError}: DishFormProps) {
-  const form = useForm<MainDishFormValues>({
-    resolver: zodResolver(mainDishFormSchema),
+interface PlateFormProps {
+  onSubmit: (data: PlateFormValues) => Promise<void>
+  isSubmitting: boolean
+  serverError?: string | null
+  schema: z.ZodType<any>
+  buttonText?: string
+}
+
+export function PlateForm({ onSubmit, isSubmitting, serverError, schema, buttonText = "Crear" }: PlateFormProps) {
+  const form = useForm<PlateFormValues>({
+    resolver: zodResolver(schema),
     defaultValues: {
       title: '',
       description: '',
@@ -32,9 +39,9 @@ export function DishForm({ onSubmit, isSubmitting, serverError}: DishFormProps) 
           name="title"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Title</FormLabel>
+              <FormLabel>Título</FormLabel>
               <FormControl>
-                <Input placeholder="Nombre del plato" {...field} autoComplete="off"/>
+                <Input placeholder="Nombre del elemento" {...field} autoComplete="off"/>
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -46,9 +53,9 @@ export function DishForm({ onSubmit, isSubmitting, serverError}: DishFormProps) 
           name="description"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Descripcion</FormLabel>
+              <FormLabel>Descripción</FormLabel>
               <FormControl>
-                <Input placeholder="Descripcion del plato" {...field} autoComplete="off"/>
+                <Input placeholder="Descripción del elemento" {...field} autoComplete="off"/>
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -56,10 +63,9 @@ export function DishForm({ onSubmit, isSubmitting, serverError}: DishFormProps) 
         />
 
         <Button type="submit" disabled={isSubmitting} className="w-full">
-          {isSubmitting ? "Guardando..." : "Crear plato"}
+          {isSubmitting ? "Guardando..." : buttonText}
         </Button>
       </form>
     </Form>
   )
-
 }

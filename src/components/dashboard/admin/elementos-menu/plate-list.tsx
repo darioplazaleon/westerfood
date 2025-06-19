@@ -1,29 +1,38 @@
 import { PaginatedResponse } from '@/types/dashboard'
-import { MainDish } from '@/lib/validations/main-dish-form'
-import { MainDishCard } from '@/components/dashboard/admin/elementos-menu/main-dish-card'
+import { PlateCard } from '@/components/dashboard/admin/elementos-menu/plate-card'
 import {
   Pagination,
-  PaginationContent, PaginationEllipsis,
+  PaginationContent,
+  PaginationEllipsis,
   PaginationItem,
-  PaginationLink, PaginationNext,
+  PaginationLink,
+  PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination'
 
-interface PlatosPrincipalesListProps {
+interface PlateListProps<T extends { id: string; title: string; description: string }> {
   currentPage: number;
-  data: PaginatedResponse<MainDish>
+  data: PaginatedResponse<T>;
+  basePath: string;
+  onDelete: (id: string) => Promise<{ success: boolean; error?: string }>;
+  entityName: string;
 }
 
-export default async function PlatosPrincipalesList({data, currentPage} : PlatosPrincipalesListProps) {
+export default function PlateList<T extends { id: string; title: string; description: string }>({
+                                                                                                   data,
+                                                                                                   currentPage,
+                                                                                                   basePath,
+                                                                                                   onDelete,
+                                                                                                   entityName,
+                                                                                                 }: PlateListProps<T>) {
   const products = data.content
-  const { totalPages, first, last } = data;
-  const basePath = "/dashboard/elementos-menu/platos-principales"
+  const { totalPages, first, last } = data
 
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {products.map(product => (
-          <MainDishCard dish={product} key={product.id}/>
+          <PlateCard item={product} key={product.id} onDelete={onDelete} entityName={entityName} />
         ))}
       </div>
       <div className="flex justify-center">
@@ -31,7 +40,7 @@ export default async function PlatosPrincipalesList({data, currentPage} : Platos
           <PaginationContent>
             {!first && (
               <PaginationItem>
-                <PaginationPrevious href={currentPage > 2 ? `${basePath}?page=${currentPage - 1}`: basePath}/>
+                <PaginationPrevious href={currentPage > 2 ? `${basePath}?page=${currentPage - 1}` : basePath} />
               </PaginationItem>
             )}
 

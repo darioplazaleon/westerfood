@@ -10,24 +10,37 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import React, { useState } from 'react'
-import { DishForm } from '@/components/dashboard/admin/elementos-menu/dish-form'
+import { PlateForm, PlateFormValues } from '@/components/dashboard/admin/elementos-menu/plate-form'
 import { toast } from 'sonner'
-import { MainDishFormValues } from '@/lib/validations/main-dish-form'
-import { saveDish } from '@/actions/main-dish-actions'
+import { z } from 'zod'
+import { dessertFormSchema } from '@/lib/validations/dessert-form'
+import { mainDishFormSchema } from '@/lib/validations/main-dish-form'
 
-interface DishFormModalProps {
+
+interface EntityFormModalProps {
   title: string;
   description: string;
-  onSuccess?: () => void;
+  buttonText: string;
+  schemaType: 'dessert' | 'mainDish'
+  saveEntity: (state: any, formData: FormData) => Promise<any>;
+  successMessage: string;
 }
 
-export function DishFormModal({ title, description, onSuccess }: DishFormModalProps) {
+export function PlateFormModal({
+                                  title,
+                                  description,
+                                  buttonText,
+                                  schemaType,
+                                  saveEntity,
+                                  successMessage
+                                }: EntityFormModalProps) {
+  const schema = schemaType === 'dessert' ? dessertFormSchema : mainDishFormSchema
 
   const [serverError, setServerError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
 
-  async function handleSubmit(data: MainDishFormValues) {
+  async function handleSubmit(data: PlateFormValues) {
     setIsSubmitting(true)
     setServerError(null)
 
@@ -36,7 +49,7 @@ export function DishFormModal({ title, description, onSuccess }: DishFormModalPr
       formData.append('title', data.title)
       formData.append('description', data.description)
 
-      const result = await saveDish(
+      const result = await saveEntity(
         {
           errors: {},
           success: false,
@@ -44,9 +57,8 @@ export function DishFormModal({ title, description, onSuccess }: DishFormModalPr
         formData,
       )
 
-
       if (result.success) {
-        toast.success('Plato creado correctamente.')
+        toast.success(successMessage)
         setIsOpen(false)
       } else {
         if (result.errors._form) {
@@ -64,19 +76,22 @@ export function DishFormModal({ title, description, onSuccess }: DishFormModalPr
     <>
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogTrigger asChild>
-          <Button className="bg-red-600 text-white h-10">Anadir Elemento</Button>
+          <Button className="bg-red-600 text-white h-10">Añadir Elemento</Button>
         </DialogTrigger>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{title}</DialogTitle>
-            <DialogDescription>
-              {description}
-            </DialogDescription>
+            <DialogDescription>{description}</DialogDescription>
           </DialogHeader>
-          <DishForm onSubmit={handleSubmit} isSubmitting={isSubmitting} serverError={serverError} />
+          <PlateForm
+            onSubmit={handleSubmit}
+            isSubmitting={isSubmitting}
+            serverError={serverError}
+            schema={schema}
+            buttonText={buttonText}
+          />
         </DialogContent>
       </Dialog>
     </>
   )
-
 }
