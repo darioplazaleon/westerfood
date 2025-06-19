@@ -72,7 +72,7 @@ export function CompanyDetails({ trigger, companyId }: CompanyAlertDialogProps) 
       <DialogTrigger asChild>
         {trigger || <button className="text-blue-500 hover:text-blue-700">Ver detalles</button>}
       </DialogTrigger>
-      <DialogContent className="w-300px max-h-[90vh] overflow-y-auto">
+      <DialogContent className="!max-w-5xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Building2 className="h-5 w-5" />

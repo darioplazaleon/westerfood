@@ -1,9 +1,6 @@
-'use client'
-
 import { ProtectedRoute } from '@/components/auth/protected-route'
 import { Navbar } from '@/components/landing/navbar'
 import { Toaster } from '@/components/ui/sonner'
-// import { DashboardLayout } from '@/components/layout/dashboard-layout';
 
 export default function Layout({
                                  children,
@@ -14,9 +11,11 @@ export default function Layout({
     <ProtectedRoute>
       <Navbar />
       {/*<DashboardLayout>*/}
-      {children}
+      <main className="w-full flex justify-center">
+        {children}
+      </main>
       {/*</DashboardLayout>*/}
-      <Toaster richColors/>
+      <Toaster richColors />
     </ProtectedRoute>
   )
 }

@@ -1,5 +1,6 @@
-import { Company } from '@/lib/validations/company-form'
+import { MainDish } from '@/lib/validations/main-dish-form'
 import { cookies } from 'next/headers'
+import { PaginatedResponse } from '@/types/dashboard'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL
 
@@ -23,7 +24,6 @@ async function handleResponse<T>(response: Response): Promise<T> {
     return response.json()
   }
 
-  // If it's not JSON, return the response as text
   return response.text() as unknown as T
 }
 
@@ -33,7 +33,7 @@ async function getAuthToken(): Promise<string | null> {
 }
 
 async function fetchWithAuth(url: string, options: RequestInit, retries = 1): Promise<Response> {
-  let token = await getAuthToken()
+  const token = await getAuthToken()
 
   if (!token) {
     throw new Error('No authentication token available')
@@ -66,32 +66,20 @@ async function fetchWithAuth(url: string, options: RequestInit, retries = 1): Pr
   return response
 }
 
-export const companyService = {
-
-  async getAll(): Promise<Company[]> {
-    const response = await fetchWithAuth(`${API_URL}/v1/companies`, {
+export const mainDishService = {
+  async getAll(page = 0): Promise<MainDish[]> {
+    const response = await fetchWithAuth(`${API_URL}/v1/main-dishes?page=${page}`, {
       method: 'GET',
       cache: 'no-store',
     })
 
-    const result = await handleResponse<any>(response)
+    const result = await handleResponse<PaginatedResponse<any>>(response)
 
-
-    // Handle paginated response
-    if (result && typeof result === 'object' && 'content' in result) {
-      return result.content as Company[]
-    }
-
-    // Handle direct array response
-    if (Array.isArray(result)) {
-      return result as Company[]
-    }
-
-    return []
+    return result
   },
 
   async getDetails(id: string): Promise<any> {
-    const response = await fetchWithAuth(`${API_URL}/v1/companies/details/${id}`, {
+    const response = await fetchWithAuth(`${API_URL}/v1/main-dishes/details/${id}`, {
       method: 'GET',
       cache: 'no-store',
     })
@@ -101,26 +89,26 @@ export const companyService = {
     return result
   },
 
-  async create(company: Omit<Company, 'id'>): Promise<Company> {
-    const response = await fetchWithAuth(`${API_URL}/v1/companies`, {
+  async create(mainDish: Omit<MainDish, 'id'>): Promise<MainDish> {
+    const response = await fetchWithAuth(`${API_URL}/v1/main-dishes`, {
       method: 'POST',
-      body: JSON.stringify(company),
+      body: JSON.stringify(mainDish),
     })
 
-    return handleResponse<Company>(response)
+    return handleResponse<MainDish>(response)
   },
 
-  async update(id: string, company: Omit<Company, 'id'>): Promise<Company> {
-    const response = await fetchWithAuth(`${API_URL}/v1/companies/${id}`, {
+  async update(id: string, mainDish: Omit<MainDish, 'id'>): Promise<MainDish> {
+    const response = await fetchWithAuth(`${API_URL}/v1/main-dishes/${id}`, {
       method: 'PUT',
-      body: JSON.stringify(company),
+      body: JSON.stringify(mainDish),
     })
 
-    return handleResponse<Company>(response)
+    return handleResponse<MainDish>(response)
   },
 
   async delete(id: string): Promise<void> {
-    const response = await fetchWithAuth(`${API_URL}/v1/companies/${id}`, {
+    const response = await fetchWithAuth(`${API_URL}/v1/main-dishes/${id}`, {
       method: 'DELETE',
     })
 

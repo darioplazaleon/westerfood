@@ -1,40 +1,37 @@
-export interface UserRole {
-  id: string
-  name: string
-  permissions: string[]
+export type UserRole = 'admin_client_role' | 'rrhh_client_role' | 'employee_client_role';
+
+export interface NavItem {
+  label: string;
+  href: string;
+  hasSubmenu?: boolean;
+  submenuItems?: NavItem[];
 }
 
-export interface DashboardConfig {
-  userRole: string
-  companyName: string
-  navigationItems: Array<{
-    id: string
-    label: string
-    href?: string
-    requiredPermissions?: string[]
-  }>
-  sections: Array<{
-    id: string
-    title: string
-    actionLabel?: string
-    requiredPermissions?: string[]
-  }>
-}
-
-export const ROLES: Record<string, UserRole> = {
-  admin: {
-    id: "admin",
-    name: "Administrador WesterFood",
-    permissions: ["manage_menu", "manage_companies", "view_reports", "manage_orders"],
-  },
-  company_admin: {
-    id: "company_admin",
-    name: "Administrador de Empresa",
-    permissions: ["manage_menu", "view_orders", "view_reports"],
-  },
-  employee: {
-    id: "employee",
-    name: "Empleado",
-    permissions: ["view_menu", "place_orders"],
-  },
+export type PaginatedResponse<T> = {
+  content: T[];
+  pageable: {
+    pageNumber: number;
+    pageSize: number;
+    sort: {
+      sorted: boolean;
+      empty: boolean;
+      unsorted: boolean;
+    };
+    offset: number;
+    paged: boolean;
+    unpaged: boolean;
+  };
+  last: boolean;
+  totalPages: number;
+  totalElements: number;
+  first: boolean;
+  size: number;
+  number: number;
+  sort: {
+    sorted: boolean;
+    empty: boolean;
+    unsorted: boolean;
+  };
+  numberOfElements: number;
+  empty: boolean;
 }

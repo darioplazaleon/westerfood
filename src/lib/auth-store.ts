@@ -283,11 +283,12 @@ export const useAuthStore = create<AuthState>()(
 
             // Extract roles from token
             const tokenParsed = keycloak.tokenParsed
-            const realmRoles = tokenParsed?.realm_access?.roles || []
-            const clientRoles = Object.values(tokenParsed?.resource_access || {})
-              .flatMap((client: any) => client.roles || [])
 
-            const allRoles = [...realmRoles, ...clientRoles]
+            // const realmRoles = tokenParsed?.realm_access?.roles || []
+            const clientRoles = tokenParsed?.resource_access?.['westerfood-client']?.roles || []
+
+            // const allRoles = [...realmRoles, ...clientRoles]
+            const allRoles = [...clientRoles]
 
             const updatedUser = {
               ...userInfo,

@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
+import { NavItem, UserRole } from '@/types/dashboard'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -23,5 +24,37 @@ export function formatDate(dateString: string): string {
     hour: "2-digit",
     minute: "2-digit",
   })
+}
+
+export function getNavigationItems(role?: UserRole): NavItem[] {
+  const navItems: NavItem[] = []
+
+  if (role === 'admin_client_role') {
+    navItems.push(
+      {
+        label: 'Elementos del menu', href: '/dashboard/elementos-menu',
+        hasSubmenu: true, submenuItems: [
+          { label: 'Platos Principales', href: '/dashboard/elementos-menu/platos-principales' },
+          { label: 'Postres', href: '/dashboard/elementos-menu/postres' },
+        ],
+      },
+      { label: 'Menus Semanales', href: '/dashboard/menus-semanales' },
+      { label: 'Empresas', href: '/dashboard/empresas' },
+      { label: 'Pedidos', href: '/dashboard/pedidos' },
+      { label: 'Reportes', href: '/dashboard/reportes' },
+    )
+  } else if (role === 'rrhh_client_role') {
+    navItems.push(
+      { label: 'Empleados', href: '/dashboard/empleados' },
+      { label: 'Pedidos', href: '/dashboard/pedidos' },
+      { label: 'Estadisticas', href: '/dashboard/estadisticas' },
+    )
+  } else if (role === 'employee_client_role') {
+    navItems.push(
+      { label: 'Pedidos', href: '/dashboard/' },
+    )
+  }
+
+  return navItems
 }
 

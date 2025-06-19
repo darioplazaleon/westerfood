@@ -13,7 +13,7 @@ export function AuthSection() {
 
     useEffect(() => {
         if (isAuthenticated) {
-            router.push('/dashboard');
+            router.push('/dashboard/empresas');
         }
     }, [isAuthenticated, router]);
 
@@ -44,7 +44,7 @@ export function AuthSection() {
         );
     } else if (!isAuthenticated) {
         login().then(r => {
-            router.push('/dashboard');
+            router.push('/dashboard/empresas');
         });
     }
 
